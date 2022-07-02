@@ -29,10 +29,7 @@ units = headerMeta
 #pair the meta data with the column headers
 data_frame = x %>% map2_dfc(units,  ~set_units(.x, .y, mode = "standard"))
 
-
-
 #by(data_sorted[!(WVHT %in% c(99))],
-
 
 #https://r-quantities.github.io/units/articles/measurement_units_in_R.html
 #https://www.rdocumentation.org/packages/units/versions/0.8-0/topics/units
@@ -46,14 +43,30 @@ units(data_frame$ATMP) <- make_units(degrees_F)
 units(data_frame$WTMP) <- make_units(degrees_F)
 units(data_frame$DEWP) <- make_units(degrees_F)
 
-#rint(data_frame)
+data_frame <- round(data_frame, digits=1) #round columns to nearest tenth ex. 1.1
 
+#create a string from the dates
+date <- sprintf("%s-%s-%s %s:%s", 
+                data_frame$YY,
+                data_frame$MM,
+                data_frame$DD,
+                data_frame$hh,
+                data_frame$mm
+                )
 
+#make datetime object from string
+DATETIME = strptime(date, format="%Y-%m-%d %H:%M")
 
-#TODO: Analyze trends in dominate wave peroids & wave heights
+#add as first column in dataframe
+data_frame <-cbind(DATETIME,data_frame)
+
+#remove the old columns
+data_frame <- data_frame %>% select(-YY,-MM,-DD,-hh,-mm)
+
+#TODO: Analyze trends in dominate wave periods & wave heights
 #TODO: Marry this data with over sources ex. historical weather reports like was it raining that day?
 # sorting the data by the column
-data_frame <- round(data_frame, digits=1) #round to nearest tenth ex. 1.1
+
 data_sorted <- data_frame[
     order(
       data_frame$WVHT, 
@@ -69,6 +82,7 @@ data_mod <- Reduce(rbind,
                       head,
                       n = 3))
 
-
 print (data_mod)
 write.csv(data_mod, "dominateWavePeroid.csv", row.names=TRUE)
+
+#plot.ts(data_mod)
