@@ -60,13 +60,13 @@ DATETIME = strptime(date, format="%Y-%m-%d %H:%M")
 #add as first column in dataframe
 data_frame <-cbind(DATETIME,data_frame)
 
-#remove the old columns
-data_frame <- data_frame %>% select(-YY,-MM,-DD,-hh,-mm)
+
 
 #TODO: Analyze trends in dominate wave periods & wave heights
 #TODO: Marry this data with over sources ex. historical weather reports like was it raining that day?
-# sorting the data by the column
 
+
+# order by wave height (ex. biggest waves)
 data_sorted <- data_frame[
     order(
       data_frame$WVHT, 
@@ -74,7 +74,7 @@ data_sorted <- data_frame[
       decreasing = TRUE), 
   ]
 
-# select top 3 values from each group
+# for each wave group select the top 3 with the longest dominate wave period
 data_mod <- Reduce(rbind,                               
                    by(data_sorted,
                       data_sorted["DPD"],
@@ -82,7 +82,30 @@ data_mod <- Reduce(rbind,
                       head,
                       n = 3))
 
-print (data_mod)
-write.csv(data_mod, "dominateWavePeroid.csv", row.names=TRUE)
+#order this data by DPD
+# data_month <- data_mod[
+#   order(
+#     data_mod$DPD, 
+#     decreasing = TRUE), 
+# ]
 
-#plot.ts(data_mod)
+#for each month select the top 3 DPD? not sure what its actualing doing here
+#this orders it by month somehow...
+data_plot <- Reduce(rbind,                               
+                   by(data_mod,
+                      data_mod["DATETIME"],
+                      #data_sorted["WVHT"],
+                      head,
+                      n = 3))
+
+#remove the old columns before printing/export
+data_plot <- data_plot %>% select(-YY,-MM,-DD,-hh,-mm)
+
+
+
+#print (data_mod)
+write.csv(data_plot, "dominateWavePeroid.csv", row.names=TRUE)
+
+
+with(data_plot,matplot(x=DATETIME,y=cbind(WVHT,DPD, WSPD),type="l"))
+
